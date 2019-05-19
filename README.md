@@ -6,7 +6,12 @@
 
 __Table of Contents__
 
-{{toc}}
+- [Install](Install)
+- [Usage](Usage)
+- [Other](Other)
+- [Maintainer](Maintainer)
+- [Contributing](Contributing)
+- [License](License)
 
 ## Install
 
@@ -54,11 +59,7 @@ Google Colaboratoryで`ipynb`ファイルを開き、実行します。
 
 ## Other
 
-- ChainerでDQN。強化学習を三目並べでいろいろ試してみた。（Deep Q Network、Q-Learning、モンテカルロ） - Qiita https://qiita.com/narisan25/items/e64a5741864d5a3b0db0
-- ChainerRLで三目並べを深層強化学習（Double DQN）してみた - Qiita https://qiita.com/uezo/items/87b25c93199d72a56a9a
-- OpenAI Gym で自前の環境をつくる - Qiita https://qiita.com/ohtaman/items/edcb3b0a2ff9d48a7def
-- ChainerRL クイックスタートガイド — Chainer Colab Notebook 0.0 ドキュメント https://chainer-colab-notebook.readthedocs.io/ja/latest/notebook/hands_on/chainerrl/quickstart.html
-- ログ出力のための print と import logging はやめてほしい - Qiita https://qiita.com/amedama/items/b856b2f30c2f38665701
+最新情報は[Wiki - tic-tac-toe-agent - u6k.Redmine](https://redmine.u6k.me/projects/tic-tac-toe-agent/wiki/Wiki)を参照してください。
 
 ## Maintainer
 
