@@ -6,7 +6,9 @@ import chainer.links as L
 import chainerrl
 import numpy as np
 
-#ゲームボード
+# ゲームボード
+
+
 class Board():
     def reset(self):
         self.board = np.array([0] * 9, dtype=np.float32)
@@ -24,11 +26,12 @@ class Board():
             self.done = True
 
     def check_winner(self):
-        win_conditions = ((0,1,2),(3,4,5),(6,7,8),(0,3,6),(1,4,7),(2,5,8),(0,4,8),(2,4,6))
+        win_conditions = ((0, 1, 2), (3, 4, 5), (6, 7, 8),
+                          (0, 3, 6), (1, 4, 7), (2, 5, 8), (0, 4, 8), (2, 4, 6))
         for cond in win_conditions:
             if self.board[cond[0]] == self.board[cond[1]] == self.board[cond[2]]:
-                if self.board[cond[0]]!=0:
-                    self.winner=self.board[cond[0]]
+                if self.board[cond[0]] != 0:
+                    self.winner = self.board[cond[0]]
                     self.done = True
                     return
         if np.count_nonzero(self.board) == 9:
@@ -36,7 +39,7 @@ class Board():
             self.done = True
 
     def get_empty_pos(self):
-        empties = np.where(self.board==0)[0]
+        empties = np.where(self.board == 0)[0]
         if len(empties) > 0:
             return np.random.choice(empties)
         else:
@@ -56,37 +59,35 @@ class Board():
         print((row + hr + row + hr + row).format(*tempboard))
 
 
-
-
-#explorer用のランダム関数オブジェクト
+# explorer用のランダム関数オブジェクト
 class RandomActor:
     def __init__(self, board):
         self.board = board
         self.random_count = 0
+
     def random_action_func(self):
         self.random_count += 1
         return self.board.get_empty_pos()
 
 
-
-
 params = {
-        "obs_size": 9,
-        "n_actions": 9,
-        "n_hidden_layers": 2,
-        "n_hidden_channels": 81,
-        "adam_eps": 1e-2,
-        "gamma": 0.95,
-        "explorer_start_epsilon": 1.0,
-        "explorer_end_epsilon": 0.1,
-        "explorer_decay_steps": 5000,
-        "replay_buffer_capacity": 10 ** 6,
-        "ddqn_replay_start_size": 500,
-        "ddqn_update_interval": 1,
-        "ddqn_target_update_interval": 100,
-        }
+    "obs_size": 9,
+    "n_actions": 9,
+    "n_hidden_layers": 2,
+    "n_hidden_channels": 81,
+    "adam_eps": 1e-2,
+    "gamma": 0.95,
+    "explorer_start_epsilon": 1.0,
+    "explorer_end_epsilon": 0.1,
+    "explorer_decay_steps": 5000,
+    "replay_buffer_capacity": 10 ** 6,
+    "ddqn_replay_start_size": 500,
+    "ddqn_update_interval": 1,
+    "ddqn_target_update_interval": 100,
+}
 
-experiment = Experiment(os.environ["COMET_ML_API_KEY"], project_name="tic-tac-toe")
+experiment = Experiment(
+    os.environ["COMET_ML_API_KEY"], project_name="tic-tac-toe")
 experiment.log_parameters(params)
 
 # ボードの準備
@@ -97,12 +98,12 @@ ra = RandomActor(b)
 
 # Q-functionとオプティマイザーのセットアップ
 q_func = chainerrl.q_functions.FCStateQFunctionWithDiscreteAction(
-        params["obs_size"],
-        params["n_actions"],
-        n_hidden_layers=params["n_hidden_layers"],
-        n_hidden_channels=params["n_hidden_channels"]
+    params["obs_size"],
+    params["n_actions"],
+    n_hidden_layers=params["n_hidden_layers"],
+    n_hidden_channels=params["n_hidden_channels"]
 )
-#q_func.to_gpu(0)
+# q_func.to_gpu(0)
 optimizer = chainer.optimizers.Adam(eps=params["adam_eps"])
 optimizer.setup(q_func)
 
@@ -114,7 +115,8 @@ explorer = chainerrl.explorers.LinearDecayEpsilonGreedy(
     random_action_func=ra.random_action_func)
 
 # Experience ReplayというDQNで用いる学習手法で使うバッファ
-replay_buffer = chainerrl.replay_buffer.ReplayBuffer(capacity=params["replay_buffer_capacity"])
+replay_buffer = chainerrl.replay_buffer.ReplayBuffer(
+    capacity=params["replay_buffer_capacity"])
 
 # Agentの生成（replay_buffer等を共有する2つ）
 agent_p1 = chainerrl.agents.DoubleDQN(
@@ -135,18 +137,16 @@ agent_p2 = chainerrl.agents.DoubleDQN(
     target_update_interval=params["ddqn_target_update_interval"])
 
 
-
-
-#学習ゲーム回数
+# 学習ゲーム回数
 n_episodes = 5000
 #n_episodes = 0
 
-#カウンタの宣言
+# カウンタの宣言
 miss = 0
 win = 0
 draw = 0
 
-#エピソードの繰り返し実行
+# エピソードの繰り返し実行
 for i in range(1, n_episodes + 1):
     b.reset()
     reward = 0
@@ -154,13 +154,13 @@ for i in range(1, n_episodes + 1):
     turn = np.random.choice([0, 1])
     last_state = None
     while not b.done:
-        #配置マス取得
+        # 配置マス取得
         action = agents[turn].act_and_train(b.board.copy(), reward)
 
-        #配置を実行
+        # 配置を実行
         b.move(action, 1)
 
-        #配置の結果、終了時には報酬とカウンタに値をセットして学習
+        # 配置の結果、終了時には報酬とカウンタに値をセットして学習
         if b.done == True:
             if b.winner == 1:
                 reward = 1
@@ -171,30 +171,32 @@ for i in range(1, n_episodes + 1):
                 reward = -1
             if b.missed is True:
                 miss += 1
-            #エピソードを終了して学習
+            # エピソードを終了して学習
             agents[turn].stop_episode_and_train(b.board.copy(), reward, True)
-            #相手もエピソードを終了して学習。相手のミスは勝利として学習しないように
+            # 相手もエピソードを終了して学習。相手のミスは勝利として学習しないように
             if agents[1 if turn == 0 else 0].last_state is not None and b.missed is False:
-                #前のターンでとっておいたlast_stateをaction実行後の状態として渡す
-                agents[1 if turn == 0 else 0].stop_episode_and_train(last_state, reward*-1, True)
+                # 前のターンでとっておいたlast_stateをaction実行後の状態として渡す
+                agents[1 if turn == 0 else 0].stop_episode_and_train(
+                    last_state, reward*-1, True)
         else:
-            #学習用にターン最後の状態を退避
+            # 学習用にターン最後の状態を退避
             last_state = b.board.copy()
-            #継続のときは盤面の値を反転
+            # 継続のときは盤面の値を反転
             b.board = b.board * -1
-            #ターンを切り替え
+            # ターンを切り替え
             turn = 1 if turn == 0 else 0
 
-    #コンソールに進捗表示
+    # コンソールに進捗表示
     if i % 100 == 0:
-        print("episode:", i, " / rnd:", ra.random_count, " / miss:", miss, " / win:", win, " / draw:", draw, " / statistics:", agent_p1.get_statistics(), " / epsilon:", agent_p1.explorer.epsilon)
+        print("episode:", i, " / rnd:", ra.random_count, " / miss:", miss, " / win:", win, " / draw:",
+              draw, " / statistics:", agent_p1.get_statistics(), " / epsilon:", agent_p1.explorer.epsilon)
         experiment.log_metric("ranfom_count", ra.random_count, step=i)
         experiment.log_metric("miss", miss, step=i)
         experiment.log_metric("win", win, step=i)
         experiment.log_metric("draw", draw, step=i)
         experiment.log_metric("epsilon", agent_p1.explorer.epsilon, step=i)
 
-        #カウンタの初期化
+        # カウンタの初期化
         miss = 0
         win = 0
         draw = 0
@@ -205,12 +207,10 @@ for i in range(1, n_episodes + 1):
 
 print("Training finished.")
 
-#agent_p1.load("result_20000")  #←これを追加"
+# agent_p1.load("result_20000")  #←これを追加"
 
 
-
-
-#人間のプレーヤー
+# 人間のプレーヤー
 class HumanPlayer:
     def act(self, board):
         valid = False
@@ -222,20 +222,17 @@ class HumanPlayer:
                     valid = True
                     return act-1
                 else:
-                    print ("Invalid move")
+                    print("Invalid move")
             except Exception as e:
-                    print (act +  " is invalid")
+                print(act + " is invalid")
 
 
+# 検証
 
-
-
-#検証
-
-#1/0 # stop this cell
+# 1/0 # stop this cell
 #
 #human_player = HumanPlayer()
-#for i in range(10):
+# for i in range(10):
 #    b.reset()
 #    dqn_first = np.random.choice([True, False])
 #    while not b.done:
